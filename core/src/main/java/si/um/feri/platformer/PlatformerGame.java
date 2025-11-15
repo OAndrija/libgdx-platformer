@@ -5,10 +5,18 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 public class PlatformerGame extends ApplicationAdapter {
+    private static final float PPM = 32f;
+
     private OrthographicCamera camera;
+    private OrthographicCamera uiCamera;
+
+    private World world;
+    private LightingManager lightingManager;
 
     private MapManager mapManager;
     private Player player;
@@ -18,88 +26,116 @@ public class PlatformerGame extends ApplicationAdapter {
 
     @Override
     public void create() {
+
+        // Box2D world
+        world = new World(new Vector2(0, 0), true);
+
+        // Lighting system
+        lightingManager = new LightingManager(world);
+        lightingManager.createPlayerLight();
+
         // Camera
         camera = new OrthographicCamera();
+        uiCamera = new OrthographicCamera();
+        uiCamera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        // Map manager (loads map, layers, sounds)
-        mapManager = new MapManager("tiled/MyMap.tmx",
+        mapManager = new MapManager(
+            "tiled/MyMap.tmx",
             "sounds/damage-taken.mp3",
-            "sounds/coin-collected.mp3");
+            "sounds/coin-collected.mp3"
+        );
 
         tiledMapRenderer = mapManager.getRenderer();
 
-        // Camera sized to full map
-        camera.setToOrtho(false, mapManager.getMapWidthInPx(), mapManager.getMapHeightInPx());
+        camera.setToOrtho(false,
+            mapManager.getMapWidthInPx() / PPM,
+            mapManager.getMapHeightInPx() / PPM
+        );
+
         camera.update();
 
-        player = new Player();
+        player = new Player(world);   // <-- player now uses Box2D body
 
-        // HUD
         hud = new HUD();
         hud.setHealth(100);
         hud.setScore(0);
 
-        // Collision system (needs map + sounds)
         collisionSystem = new CollisionSystem(mapManager);
 
-        // initial player position (similar to original)
+        // initial position
         player.setPosition(player.getWidth(), 160f);
     }
 
     @Override
     public void render() {
-        ScreenUtils.clear(0f, 0f, 0f, 1f);
 
-        handleConfigurationInput();
+        ScreenUtils.clear(0, 0, 0, 1);
 
         float dt = Gdx.graphics.getDeltaTime();
 
+        handleConfigurationInput();
+
+        world.step(dt, 6, 2);
+
+        // --- Gameplay update ---
         if (hud.getHealth() > 0 && hud.getScore() < 40) {
-            // Player processes input & physics
             player.handleInput();
             player.updatePhysics(dt);
 
-            // collision resolution with tile foreground
-            // compute candidate new positions and ask for collisions
-            float candidateX = player.getCandidateX();
-            float candidateY = player.getCandidateY();
+            float cx = player.getCandidateX();
+            float cy = player.getCandidateY();
 
-            // check X collision (freeze X if colliding)
-            boolean collisionX = collisionSystem.collidesWithForeground(candidateX, player.getY(), player.getWidth(), player.getHeight());
-            if (!collisionX) {
-                player.commitX(candidateX);
-            }
+            boolean colX = collisionSystem.collidesWithForeground(
+                cx, player.getY(),
+                player.getWidth(), player.getHeight()
+            );
 
-            // check Y collision (freeze Y if colliding)
-            boolean collisionY = collisionSystem.collidesWithForeground(player.getX(), candidateY, player.getWidth(), player.getHeight());
-            if (!collisionY) {
-                player.commitY(candidateY);
+            if (!colX) player.commitX(cx);
+
+            boolean colY = collisionSystem.collidesWithForeground(
+                player.getX(), cy,
+                player.getWidth(), player.getHeight()
+            );
+
+            if (!colY) {
+                player.commitY(cy);
             } else {
-                // landed on ground - reset vertical velocity as in original
-                if (player.getVelocityY() < 0) {
-                    player.setJumping(false);
-                }
+                if (player.getVelocityY() < 0) player.setJumping(false);
                 player.setVelocityY(0);
             }
 
-            // coins & damage checks (uses player's bounding box / center)
             collisionSystem.handlePlayerTileCollisions(player, hud);
         }
 
-        // update camera (we keep same behavior as original)
+        // --- Update player light ---
+        lightingManager.updatePlayerLight(
+            player.getCenterX(),
+            player.getCenterY()
+        );
+
+        // --- WORLD RENDER ---
         camera.update();
         tiledMapRenderer.setView(camera);
         tiledMapRenderer.render();
 
-        // Draw player + HUD using the same batch tiledMapRenderer uses
+        // draw player
+        tiledMapRenderer.getBatch().setProjectionMatrix(camera.combined);
         tiledMapRenderer.getBatch().begin();
-
         player.draw(tiledMapRenderer.getBatch());
+        tiledMapRenderer.getBatch().end();
 
-        hud.draw(tiledMapRenderer.getBatch(), mapManager.getMapWidthInPx(), mapManager.getMapHeightInPx());
+        // lights
+        lightingManager.getRayHandler().setCombinedMatrix(camera);
+        lightingManager.getRayHandler().updateAndRender();
 
+        // --- HUD RENDER (SCREEN CAMERA) ---
+        uiCamera.update();
+        tiledMapRenderer.getBatch().setProjectionMatrix(uiCamera.combined);
+        tiledMapRenderer.getBatch().begin();
+        hud.draw(tiledMapRenderer.getBatch());
         tiledMapRenderer.getBatch().end();
     }
+
 
     private void handleConfigurationInput() {
         // layer toggles and exit as in original
@@ -128,5 +164,7 @@ public class PlatformerGame extends ApplicationAdapter {
         mapManager.dispose();
         player.dispose();
         hud.dispose();
+        lightingManager.dispose();
+        world.dispose();
     }
 }

@@ -20,13 +20,14 @@ public class MapManager {
     private float tileHeight;
     private float mapWidthInPx;
     private float mapHeightInPx;
+    private static final float PPM = 32f;
 
     private Sound damageTakenSound;
     private Sound coinCollectSound;
 
     public MapManager(String tmxPath, String damageSoundPath, String coinSoundPath) {
         tiledMap = new TmxMapLoader().load(tmxPath);
-        renderer = new OrthogonalTiledMapRenderer(tiledMap);
+        renderer = new OrthogonalTiledMapRenderer(tiledMap, 1f / PPM);
 
         foregroundLayer = (TiledMapTileLayer) tiledMap.getLayers().get("Foreground");
         coinLayer = (TiledMapTileLayer) tiledMap.getLayers().get("Coin");

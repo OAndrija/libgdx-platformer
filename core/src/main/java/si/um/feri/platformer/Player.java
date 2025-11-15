@@ -6,27 +6,65 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.World;
 
 public class Player {
-    private final Sprite sprite;
 
-    // physics
+    private Body body;
+    private final Sprite sprite;
+    private World world;
+
     private float velocityY = 0;
     private boolean isJumping = false;
+
     private final float gravity = -500f;
     private final float jumpVelocity = 300f;
     private final float maxFallSpeed = -600f;
-
-    // movement speed (pixels per second)
     private final float speed = 150f;
-
-    // candidate positions used for collision checks before committing
+    private static final float PPM = 32f;
     private float candidateX;
     private float candidateY;
 
-    public Player() {
+    public Player(World world) {
+        this.world = world;
+
+        // Sprite
         Texture t = new Texture("tiled/GraveRobberNew.png");
         sprite = new Sprite(t);
+
+        // Body definition (static point for lights)
+        BodyDef bdef = new BodyDef();
+        bdef.type = BodyDef.BodyType.KinematicBody;   // moves manually, Box2D won't control
+        bdef.position.set(0, 0);
+
+        body = world.createBody(bdef);
+    }
+
+    public float getCenterX() {
+        return getX() + sprite.getWidth() * 0.5f;
+    }
+
+    public float getCenterY() {
+        return getY() + sprite.getHeight() * 0.5f;
+    }
+
+    public void setPosition(float x, float y) {
+        sprite.setPosition(x, y);
+        body.setTransform(x / PPM, y / PPM, 0);
+    }
+
+    public void commitX(float x) {
+        sprite.setX(x);
+        body.setTransform(sprite.getX() / PPM,
+            sprite.getY() / PPM, 0);
+    }
+
+    public void commitY(float y) {
+        sprite.setY(y);
+        body.setTransform(sprite.getX() / PPM,
+            sprite.getY() / PPM, 0);
     }
 
     public void handleInput() {
@@ -57,15 +95,6 @@ public class Player {
         candidateY = getY() + velocityY * dt;
     }
 
-    // committers after collision check
-    public void commitX(float x) {
-        sprite.setX(x);
-    }
-
-    public void commitY(float y) {
-        sprite.setY(y);
-    }
-
     public float getCandidateX() {
         return candidateX;
     }
@@ -80,10 +109,6 @@ public class Player {
 
     public float getY() {
         return sprite.getY();
-    }
-
-    public void setPosition(float x, float y) {
-        sprite.setPosition(x, y);
     }
 
     public float getWidth() {
