@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="8" nextobjectid="5">
+ <tileset firstgid="1" name="Tileset" tilewidth="32" tileheight="32" tilecount="60" columns="10">
+  <image source="1 Tiles/Tileset.png" width="320" height="192"/>
+ </tileset>
+ <tileset firstgid="61" name="Background" tilewidth="32" tileheight="32" tilecount="700" columns="35">
+  <image source="2 Background/Background960.png" width="1137" height="640"/>
+ </tileset>
+ <tileset firstgid="761" name="Willow1" tilewidth="32" tileheight="32" tilecount="12" columns="3">
+  <image source="3 Objects/Willows/1.png" width="104" height="135"/>
+ </tileset>
+ <tileset firstgid="773" name="Willow2" tilewidth="32" tileheight="32" tilecount="20" columns="4">
+  <image source="3 Objects/Willows/2.png" width="141" height="168"/>
+ </tileset>
+ <tileset firstgid="793" name="Spike1" tilewidth="32" tileheight="32" tilecount="1" columns="1">
+  <image source="3 Objects/Fence/1.png" width="32" height="32"/>
+ </tileset>
+ <tileset firstgid="794" name="Spike2" tilewidth="32" tileheight="32" tilecount="1" columns="1">
+  <image source="3 Objects/Fence/2.png" width="32" height="32"/>
+ </tileset>
+ <tileset firstgid="795" name="Coin" tilewidth="32" tileheight="32" tilecount="8" columns="8">
+  <image source="coin_gold.png" width="256" height="32"/>
+ </tileset>
+ <layer id="1" name="Background" width="30" height="20" opacity="0.77">
+  <data encoding="base64" compression="zlib">
+   eJwN04N2GAYAQNGs64qptqdyqm2nblPbtu2ktu0ktc3Utm3b2u45737CyxMQEJCXfOSnAAUpRGGKUJRiFKcEJQmkFKUpQ1nKUZ4KVKQSQVSmClWpRnXqUo/6NKAhjWhME5rSjOa0oCWtaE0b2tKO9nSgI53oTBe60o3u9KAnvRjAQAYxmGBCGMJQhjGcEYxkFKMZw1jGMZ4JTGQSk5nCVKYxnRnMZBazWcgiQgkjnMUsYSnLWM4KVrKK1axhLetYzwY2sonNbGEr29jODnayiwgOcJBDHOYIRznGcU5wklOc5gxnOcd5LnCRS1zmCle5xnVucJNb3OYOd3nME57yjOe84CWveM0b3vKO93zgI5/4zBe+8h8B34hIfEtkviMKUYlGdGIQk1jEJg5xiUd8EpCQRCQmCUlJRnJSkJJU/MKv/Mbv/EFq0pCWdKQnAxnJRGaykJVsZCcHOclFbvKQl3zkpwAFKURhilCUYhSnBCUJpBSlKUNZgqhMFapSjerUoCa1qE0d6lKP+jSgIY1oTBOa0ozmtKAlrWhNG9rSjvZ0pRvd6UFPetGbPvSlH/0ZwEAGMZhgQhjCUIYxnBGMZBSjGcNYxjGeCUxjOjOYySxmM4e5zGM+C1jIIkIJI5zFLGEpy1jOClayitWsYS3rWM8GtrGdHexkFxHsZg972cd+DnCQQxzmCEc5xnFOcJJTnOYMZznHeS5wkUvc4Ca3uM0d7nKP+zzgIY94zBOe8oznvOAlr3jNG97yjvd84COf+MwXvhI5kr+IQlSiEZ3v+YEf+YmfiUFMYhGbOMQlHvFJQEISkZgkJCUZyUlBSlKRmjSkJR3pycCf/MXf/MO/ZCQTmclCVrKRnRzkJBe5yUNe8pGfAhSkEIUpSSClKE0ZylKO8lSgIpUIojJVqEo1qlODmtSiNnWoSz3q04CGNKIxTWhFa9rQlna0pwMd6URnutCVbnSnBz3pRW/60Jd+9GcAAxnEYIIJYQhDGc0YxjKO8UxgIpOYzBSmMo3pzGAms5jNHOYyj/ksYCGLCCWMcBazhKWsZg1rWcd6NrCRTWxmC1vZxnZ2sJNdRLCbPexlH/s5wEEOcZgjHOUYxznLOc5zgYtc4jJXuMo1rnODm9ziNne4yz3u84CHPOIxT3jKM57zgpe84n/pqz7Q
+  </data>
+ </layer>
+ <layer id="3" name="Trees" width="30" height="20" opacity="0.9">
+  <data encoding="base64" compression="zlib">
+   eJztjUkOg0AMwNIZoJS90Bb+/0vWYsQc+EBOxJKVKIdYxDAMw7gSe5EEn5j68zY6kQlnp9d90cowxyJ0F3orbordklaFNTah+z967A+v133zu8UOP6HjmB4jxe6X3z/scVDsGPdmB1QUCGo=
+  </data>
+ </layer>
+ <layer id="2" name="Foreground" width="30" height="20">
+  <properties>
+   <property name="collision" type="bool" value="true"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFo2AUjIJRMJyAAhArArHSALuDFkCBgTS/EaOeCQtmJtuFuAEjmh08WDAvDezlxmHXSLdXjsoY3V4A6ksFdg==
+  </data>
+ </layer>
+ <layer id="5" name="Spikes" width="30" height="20">
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFo2AUjIJRMApGwSgYGCDJDMFSaDSMjYuPix4sAACUuwI6
+  </data>
+ </layer>
+ <layer id="7" name="Coin" width="30" height="20">
+  <properties>
+   <property name="collectable" type="bool" value="true"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFo2AUjIJRQCsgzzzQLqAdkCPRb6SqpyUYTG4ZBcMTAACnzwCG
+  </data>
+ </layer>
+ <objectgroup id="6" name="Damage">
+  <properties>
+   <property name="damage" type="bool" value="true"/>
+  </properties>
+  <object id="4" name="Damage" x="190.667" y="574.667" width="640" height="33.3333"/>
+ </objectgroup>
+</map>
