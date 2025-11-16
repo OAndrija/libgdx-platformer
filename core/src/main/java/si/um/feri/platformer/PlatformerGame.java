@@ -56,7 +56,9 @@ public class PlatformerGame extends ApplicationAdapter {
             mapManager.getMapWidthInPx() / PPM,
             mapManager.getMapHeightInPx() / PPM);
 
-        camera.zoom = 0.7f;   // Hollow Knight style zoom-in
+        camera.zoom = 0.6f;
+        camera.position.x = camera.viewportWidth / 2f - 50f;
+        camera.position.y = camera.viewportHeight / 2f - 50f;
         camera.update();
 
         player = new Player(world);
@@ -130,7 +132,7 @@ public class PlatformerGame extends ApplicationAdapter {
         if (Math.abs(playerVelocityX) > 0.001f) {
             // player is moving left/right
             float direction = Math.signum(playerVelocityX);
-            lookAheadTarget = direction * 1.5f;  // distance camera looks ahead in world units
+            lookAheadTarget = direction * 7f;  // distance camera looks ahead in world units
         } else {
             // player stopped -> relax back to center
             lookAheadTarget = 0f;
