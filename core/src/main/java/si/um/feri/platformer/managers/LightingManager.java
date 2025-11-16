@@ -10,46 +10,45 @@ public class LightingManager {
 
     private final RayHandler rayHandler;
     private PointLight playerLight;
-
     private float pulseTime = 0f;
 
     public LightingManager(World world) {
         rayHandler = new RayHandler(world);
 
-        // Hollow Knight style: darker world, soft glow
-        rayHandler.setAmbientLight(0.55f);  // slightly darker for high contrast
-        rayHandler.setBlurNum(3);           // stronger blur for smooth glow
+        // Darker world → stronger contrast
+        rayHandler.setAmbientLight(0.35f);
         rayHandler.setBlur(true);
+        rayHandler.setBlurNum(8);
     }
 
     public void createPlayerLight() {
-        // Color: warm golden white
-        Color hkColor = new Color(1f, 0.92f, 0.80f, 0.65f);
+
+        Color warmGlow = new Color(1f, 0.92f, 0.80f, 0.6f);
 
         playerLight = new PointLight(
             rayHandler,
-            128,             // more rays = smoother cone
-            hkColor,
-            15f,              // base radius (world units)
+            128,           // smooth light
+            warmGlow,
+            15f,           // initial radius
             0, 0
         );
 
-        playerLight.setSoft(true);          // very important!
-        playerLight.setSoftnessLength(2.4f); // bigger = smoother falloff
+        playerLight.setSoft(true);
+        playerLight.setSoftnessLength(4f);
+        playerLight.setStaticLight(false);
+        playerLight.setXray(false);          // IMPORTANT: If true → light ignores shadows
+        playerLight.setContactFilter((short)0xFFFF, (short)0xFFFF, (short)0xFFFF);
     }
 
     public void updatePlayerLight(float x, float y, float dt) {
-        if (playerLight != null) {
+        if (playerLight == null) return;
 
-            // Smooth pulsation (subtle)
-            pulseTime += dt;
-            float pulse = (float) Math.sin(pulseTime * 1.8f) * 0.25f;  // amplitude
-            float radius = 15f + pulse;
+        // Slight breathing effect
+        pulseTime += dt;
+        float pulse = (float) Math.sin(pulseTime * 1.8f) * 0.25f;
 
-            playerLight.setDistance(radius);
-
-            playerLight.setPosition(x, y);
-        }
+        playerLight.setDistance(15f + pulse);
+        playerLight.setPosition(x, y);
     }
 
     public RayHandler getRayHandler() {
@@ -60,5 +59,6 @@ public class LightingManager {
         rayHandler.dispose();
     }
 }
+
 
 

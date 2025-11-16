@@ -53,6 +53,7 @@ public class PlatformerGame extends ApplicationAdapter {
         );
 
         tiledMapRenderer = mapManager.getRenderer();
+        mapManager.buildCollision(world);
 
         camera.setToOrtho(false,
             mapManager.getMapWidthInPx() / PPM,
@@ -82,6 +83,7 @@ public class PlatformerGame extends ApplicationAdapter {
 
         ScreenUtils.clear(0, 0, 0, 1);
         float dt = Gdx.graphics.getDeltaTime();
+
         handleConfigurationInput();
         world.step(dt, 6, 2);
 
@@ -103,6 +105,7 @@ public class PlatformerGame extends ApplicationAdapter {
                 player.getX(), cy,
                 player.getWidth(), player.getHeight()
             );
+
             if (!colY) {
                 player.commitY(cy);
             } else {
@@ -113,22 +116,35 @@ public class PlatformerGame extends ApplicationAdapter {
             collisionSystem.handlePlayerTileCollisions(player, hud);
         }
 
-        // Lighting
+        // --- UPDATE LIGHT ---
         lightingManager.updatePlayerLight(
             player.getCenterX(),
             player.getCenterY(),
             dt
         );
 
-        // --- UPDATE CAMERA SYSTEM ---
+        // --- UPDATE CAMERA ---
         cameraSystem.update(dt);
 
-        // --- RENDER WORLD ---
+        // --- RENDER BACKGROUND LAYERS (lit) ---
         tiledMapRenderer.setView(camera);
-        tiledMapRenderer.render();
+        tiledMapRenderer.render(mapManager.getBackgroundLayerIndices());
 
-        lightingManager.getRayHandler().setCombinedMatrix(camera);
+
+        // --- RENDER LIGHTS ---
+        lightingManager.getRayHandler().setCombinedMatrix(
+            camera.combined,
+            camera.position.x,
+            camera.position.y,
+            camera.viewportWidth * camera.zoom,
+            camera.viewportHeight * camera.zoom
+        );
+
         lightingManager.getRayHandler().updateAndRender();
+        tiledMapRenderer.render(mapManager.getCoinLayerIndex());
+
+        // --- RENDER FOREGROUND LAYERS (unlit) ---
+        tiledMapRenderer.render(mapManager.getForegroundLayerIndices());
 
         // --- RENDER PLAYER ---
         tiledMapRenderer.getBatch().setProjectionMatrix(camera.combined);
@@ -143,6 +159,7 @@ public class PlatformerGame extends ApplicationAdapter {
         hud.draw(tiledMapRenderer.getBatch());
         tiledMapRenderer.getBatch().end();
     }
+
 
     private void handleConfigurationInput() {
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) mapManager.toggleLayerVisibility("Background");
