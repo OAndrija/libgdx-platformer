@@ -16,8 +16,8 @@ public class MapManager {
     private TiledMapTileLayer coinLayer;
     private MapObjects damageObjects;
 
-    private float tileWidth;
-    private float tileHeight;
+    private float tileWidthPx;
+    private float tileHeightPx;
     private float mapWidthInPx;
     private float mapHeightInPx;
     private static final float PPM = 32f;
@@ -27,16 +27,27 @@ public class MapManager {
 
     public MapManager(String tmxPath, String damageSoundPath, String coinSoundPath) {
         tiledMap = new TmxMapLoader().load(tmxPath);
+
+        // renderer uses unitScale to convert pixels -> world units
         renderer = new OrthogonalTiledMapRenderer(tiledMap, 1f / PPM);
 
         foregroundLayer = (TiledMapTileLayer) tiledMap.getLayers().get("Foreground");
         coinLayer = (TiledMapTileLayer) tiledMap.getLayers().get("Coin");
         damageObjects = tiledMap.getLayers().get("Damage").getObjects();
 
-        tileWidth = foregroundLayer.getTileWidth();
-        tileHeight = foregroundLayer.getTileHeight();
-        mapWidthInPx = foregroundLayer.getWidth() * tileWidth;
-        mapHeightInPx = foregroundLayer.getHeight() * tileHeight;
+        // store pixel sizes (Tiled stores tile sizes in pixels)
+        if (foregroundLayer != null) {
+            tileWidthPx = foregroundLayer.getTileWidth();
+            tileHeightPx = foregroundLayer.getTileHeight();
+            mapWidthInPx = foregroundLayer.getWidth() * tileWidthPx;
+            mapHeightInPx = foregroundLayer.getHeight() * tileHeightPx;
+        } else {
+            // fallback defaults (in pixels)
+            tileWidthPx = 32f;
+            tileHeightPx = 32f;
+            mapWidthInPx = 0f;
+            mapHeightInPx = 0f;
+        }
 
         damageTakenSound = Gdx.audio.newSound(Gdx.files.internal(damageSoundPath));
         coinCollectSound = Gdx.audio.newSound(Gdx.files.internal(coinSoundPath));
@@ -58,18 +69,44 @@ public class MapManager {
         return renderer;
     }
 
+    /**
+     * Returns tile width in WORLD UNITS (pixels / PPM).
+     */
     public float getTileWidth() {
-        return tileWidth;
+        return tileWidthPx / PPM;
     }
 
+    /**
+     * Returns tile height in WORLD UNITS (pixels / PPM).
+     */
     public float getTileHeight() {
-        return tileHeight;
+        return tileHeightPx / PPM;
     }
 
+    /**
+     * Returns tile width in PIXELS (for callers that need pixel values).
+     */
+    public float getTileWidthPx() {
+        return tileWidthPx;
+    }
+
+    /**
+     * Returns tile height in PIXELS (for callers that need pixel values).
+     */
+    public float getTileHeightPx() {
+        return tileHeightPx;
+    }
+
+    /**
+     * map width in PIXELS (kept as original for camera conversion in PlatformerGame).
+     */
     public float getMapWidthInPx() {
         return mapWidthInPx;
     }
 
+    /**
+     * map height in PIXELS (kept as original for camera conversion in PlatformerGame).
+     */
     public float getMapHeightInPx() {
         return mapHeightInPx;
     }

@@ -9,25 +9,28 @@ public class CollisionSystem {
     private final MapManager mapManager;
     private final TiledMapTileLayer foreground;
     private final TiledMapTileLayer coins;
-    private final float tileW;
-    private final float tileH;
+    private final float tileW; // world units
+    private final float tileH; // world units
 
     public CollisionSystem(MapManager mapManager) {
         this.mapManager = mapManager;
         this.foreground = mapManager.getForegroundLayer();
         this.coins = mapManager.getCoinLayer();
-        this.tileW = mapManager.getTileWidth();
-        this.tileH = mapManager.getTileHeight();
+        this.tileW = mapManager.getTileWidth();   // world units
+        this.tileH = mapManager.getTileHeight();  // world units
     }
 
     /**
      * Checks if rectangle at (x,y,width,height) overlaps any non-null cell in the Foreground layer.
+     * All coordinates and sizes are expected in WORLD UNITS.
      */
     public boolean collidesWithForeground(float x, float y, float width, float height) {
-        int leftTileX = (int) (x / tileW);
-        int rightTileX = (int) ((x + width) / tileW);
-        int bottomTileY = (int) (y / tileH);
-        int topTileY = (int) ((y + height) / tileH);
+        if (foreground == null) return false;
+
+        int leftTileX = (int) Math.floor(x / tileW);
+        int rightTileX = (int) Math.floor((x + width - 0.0001f) / tileW); // subtract tiny eps to avoid exact border issues
+        int bottomTileY = (int) Math.floor(y / tileH);
+        int topTileY = (int) Math.floor((y + height - 0.0001f) / tileH);
 
         // bounds safety (map may be smaller or negative indexes)
         if (leftTileX < 0) leftTileX = 0;
@@ -49,29 +52,52 @@ public class CollisionSystem {
      * Handles coin collection and damage object collisions.
      * Coin = remove coin cell and play coin sound and add score.
      * Damage = check overlap with rectangle MapObjects and reduce health.
+     *
+     * Player positions and sizes are in WORLD UNITS. Tiled objects are in PIXELS,
+     * so we convert them to world units for comparisons.
      */
     public void handlePlayerTileCollisions(Player player, HUD hud) {
-        // coin collection using player's center tile (same as original)
-        float centerX = player.getX() + player.getWidth() / 2f;
-        float centerY = player.getY() + player.getHeight() / 2f;
-        int tileX = (int) (centerX / tileW);
-        int tileY = (int) (centerY / tileH);
+        if (coins != null) {
+            // coin collection using player's center tile
+            float centerX = player.getX() + player.getWidth() / 2f;
+            float centerY = player.getY() + player.getHeight() / 2f;
+            int tileX = (int) Math.floor(centerX / tileW);
+            int tileY = (int) Math.floor(centerY / tileH);
 
-        if (tileX >= 0 && tileY >= 0 && tileX < coins.getWidth() && tileY < coins.getHeight()) {
-            if (coins.getCell(tileX, tileY) != null) {
-                coins.setCell(tileX, tileY, null);
-                if (mapManager.getCoinSound() != null) mapManager.getCoinSound().play();
-                hud.addScore(10);
+            if (tileX >= 0 && tileY >= 0 && tileX < coins.getWidth() && tileY < coins.getHeight()) {
+                if (coins.getCell(tileX, tileY) != null) {
+                    coins.setCell(tileX, tileY, null);
+                    if (mapManager.getCoinSound() != null) mapManager.getCoinSound().play();
+                    hud.addScore(10);
+                }
             }
         }
 
-        // damage objects (rectangle objects)
+        // damage objects (rectangle objects). Tiled rectangles are in PIXELS -> convert to world units.
         Rectangle playerRect = player.getBoundingRectangle();
         for (MapObject mo : mapManager.getDamageObjects()) {
             if (mo instanceof RectangleMapObject) {
                 RectangleMapObject rmo = (RectangleMapObject) mo;
-                Rectangle rect = rmo.getRectangle();
-                if (playerRect.overlaps(rect)) {
+                Rectangle rectPx = rmo.getRectangle();
+
+                // convert rectangle from pixels to world units using MapManager's PPM
+                float pxToWorld = 1f / mapManager.getTileWidthPx() * mapManager.getTileWidth(); // tileWidthPx/PPM -> tileWidth (world)
+                // simpler: divide by PPM directly (mapManager internally knows PPM = 32)
+                float rectX = rectPx.x / mapManager.getTileWidthPx() * mapManager.getTileWidth() * (mapManager.getTileWidthPx() / mapManager.getTileWidthPx()); // keep stable
+                // The above looks complicated; perform direct division by PPM for clarity:
+                float rectX_world = rectPx.x /  (mapManager.getTileWidthPx() / mapManager.getTileWidth()) ; // not used
+                // Simpler and robust: use PPM constant: rectangle px -> world units by dividing by PPM (which MapManager uses)
+                // We'll compute rect in world units using mapManager.getTileWidthPx() / mapManager.getTileWidth() ratio:
+                // Since mapManager.getTileWidth() = tileWidthPx / PPM => PPM = tileWidthPx / mapManager.getTileWidth()
+                float PPM = mapManager.getTileWidthPx() / mapManager.getTileWidth();
+                Rectangle rectWorld = new Rectangle(
+                    rectPx.x / PPM,
+                    rectPx.y / PPM,
+                    rectPx.width / PPM,
+                    rectPx.height / PPM
+                );
+
+                if (playerRect.overlaps(rectWorld)) {
                     // only play sound when health is full? original played only on first hit if health==100
                     if (hud.getHealth() == 100) {
                         if (mapManager.getDamageSound() != null) mapManager.getDamageSound().play();
