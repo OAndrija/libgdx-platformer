@@ -5,12 +5,17 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+import si.um.feri.platformer.entities.Player;
+import si.um.feri.platformer.managers.LightingManager;
+import si.um.feri.platformer.managers.MapManager;
+import si.um.feri.platformer.systems.CameraSystem;
+import si.um.feri.platformer.systems.CollisionSystem;
+
 public class PlatformerGame extends ApplicationAdapter {
+
     private static final float PPM = 32f;
 
     private OrthographicCamera camera;
@@ -25,17 +30,14 @@ public class PlatformerGame extends ApplicationAdapter {
     private HUD hud;
     private OrthogonalTiledMapRenderer tiledMapRenderer;
 
-    // Hollow Knight Look-Ahead variables
-    private float lookAheadX = 0f;
-    private float lookAheadTarget = 0f;
+    private CameraSystem cameraSystem; // NEW
 
     @Override
     public void create() {
 
-        // Box2D world
+        // Physics world
         world = new World(new com.badlogic.gdx.math.Vector2(0, 0), true);
 
-        // Lighting system
         lightingManager = new LightingManager(world);
         lightingManager.createPlayerLight();
 
@@ -69,6 +71,9 @@ public class PlatformerGame extends ApplicationAdapter {
 
         collisionSystem = new CollisionSystem(mapManager);
 
+        // ---- NEW CAMERA SYSTEM ----
+        cameraSystem = new CameraSystem(camera, player, mapManager);
+
         player.setPosition(player.getWidth(), 160f / PPM);
     }
 
@@ -76,7 +81,6 @@ public class PlatformerGame extends ApplicationAdapter {
     public void render() {
 
         ScreenUtils.clear(0, 0, 0, 1);
-
         float dt = Gdx.graphics.getDeltaTime();
         handleConfigurationInput();
         world.step(dt, 6, 2);
@@ -93,14 +97,12 @@ public class PlatformerGame extends ApplicationAdapter {
                 cx, player.getY(),
                 player.getWidth(), player.getHeight()
             );
-
             if (!colX) player.commitX(cx);
 
             boolean colY = collisionSystem.collidesWithForeground(
                 player.getX(), cy,
                 player.getWidth(), player.getHeight()
             );
-
             if (!colY) {
                 player.commitY(cy);
             } else {
@@ -111,66 +113,24 @@ public class PlatformerGame extends ApplicationAdapter {
             collisionSystem.handlePlayerTileCollisions(player, hud);
         }
 
-        // --- LIGHTING UPDATE ---
+        // Lighting
         lightingManager.updatePlayerLight(
             player.getCenterX(),
             player.getCenterY(),
             dt
         );
 
-        // =========================================================================
-        //                    H O L L O W   K N I G H T   C A M E R A
-        // =========================================================================
+        // --- UPDATE CAMERA SYSTEM ---
+        cameraSystem.update(dt);
 
-        float lerp = 5f * dt; // smooth camera follow
-        float targetX = player.getCenterX();
-        float targetY = player.getCenterY();
-
-        // --- LOOK AHEAD LOGIC ---
-        float playerVelocityX = player.getCandidateX() - player.getX();
-
-        if (Math.abs(playerVelocityX) > 0.001f) {
-            // player is moving left/right
-            float direction = Math.signum(playerVelocityX);
-            lookAheadTarget = direction * 7f;  // distance camera looks ahead in world units
-        } else {
-            // player stopped -> relax back to center
-            lookAheadTarget = 0f;
-        }
-
-        // Smooth interpolation of look-ahead offset
-        lookAheadX += (lookAheadTarget - lookAheadX) * 2.5f * dt;
-
-        // Apply follow + look-ahead
-        float desiredX = targetX + lookAheadX;
-        float desiredY = targetY;
-
-        camera.position.x += (desiredX - camera.position.x) * lerp;
-        camera.position.y += (desiredY - camera.position.y) * lerp;
-
-        // --- CAMERA BOUNDARIES ---
-        float halfW = camera.viewportWidth * camera.zoom * 0.5f;
-        float halfH = camera.viewportHeight * camera.zoom * 0.5f;
-
-        float mapW = mapManager.getMapWidthInPx() / PPM;
-        float mapH = mapManager.getMapHeightInPx() / PPM;
-
-        // clamp
-        camera.position.x = MathUtils.clamp(camera.position.x, halfW, mapW - halfW);
-        camera.position.y = MathUtils.clamp(camera.position.y, halfH, mapH - halfH);
-
-        camera.update();
-
-        // =========================================================================
-        //                               R E N D E R
-        // =========================================================================
-
+        // --- RENDER WORLD ---
         tiledMapRenderer.setView(camera);
         tiledMapRenderer.render();
 
         lightingManager.getRayHandler().setCombinedMatrix(camera);
         lightingManager.getRayHandler().updateAndRender();
 
+        // --- RENDER PLAYER ---
         tiledMapRenderer.getBatch().setProjectionMatrix(camera.combined);
         tiledMapRenderer.getBatch().begin();
         player.draw(tiledMapRenderer.getBatch());

@@ -1,4 +1,4 @@
-package si.um.feri.platformer;
+package si.um.feri.platformer.managers;
 
 import box2dLight.PointLight;
 import box2dLight.RayHandler;
@@ -24,13 +24,13 @@ public class LightingManager {
 
     public void createPlayerLight() {
         // Color: warm golden white
-        Color hkColor = new Color(1f, 0.92f, 0.80f, 0.7f);
+        Color hkColor = new Color(1f, 0.92f, 0.80f, 0.65f);
 
         playerLight = new PointLight(
             rayHandler,
             128,             // more rays = smoother cone
             hkColor,
-            13f,              // base radius (world units)
+            15f,              // base radius (world units)
             0, 0
         );
 
@@ -44,7 +44,7 @@ public class LightingManager {
             // Smooth pulsation (subtle)
             pulseTime += dt;
             float pulse = (float) Math.sin(pulseTime * 1.8f) * 0.25f;  // amplitude
-            float radius = 13f + pulse;
+            float radius = 15f + pulse;
 
             playerLight.setDistance(radius);
 

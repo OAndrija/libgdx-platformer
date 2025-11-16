@@ -1,4 +1,4 @@
-package si.um.feri.platformer;
+package si.um.feri.platformer.entities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -14,18 +14,18 @@ public class Player {
 
     private static final float PPM = 32f;
 
-    private Body body;
-    private Sprite sprite;
-    private World world;
+    private final Body body;
+    private final Sprite sprite;
+    private final World world;
 
     // physics (world units)
     private float velocityY = 0;
     private boolean isJumping = false;
 
-    private final float gravity = -15f;        // world units
-    private final float jumpVelocity = 10f;     // world units
+    private final float gravity = -26f;        // world units
+    private final float jumpVelocity = 12f;     // world units
     private final float maxFallSpeed = -20f;
-    private final float moveSpeed = 5f;
+    private final float moveSpeed = 7f;
 
     // movement candidates
     private float candidateX;

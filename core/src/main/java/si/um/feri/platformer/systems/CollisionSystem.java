@@ -1,9 +1,13 @@
-package si.um.feri.platformer;
+package si.um.feri.platformer.systems;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+
+import si.um.feri.platformer.HUD;
+import si.um.feri.platformer.managers.MapManager;
+import si.um.feri.platformer.entities.Player;
 
 public class CollisionSystem {
     private final MapManager mapManager;
@@ -52,7 +56,6 @@ public class CollisionSystem {
      * Handles coin collection and damage object collisions.
      * Coin = remove coin cell and play coin sound and add score.
      * Damage = check overlap with rectangle MapObjects and reduce health.
-     *
      * Player positions and sizes are in WORLD UNITS. Tiled objects are in PIXELS,
      * so we convert them to world units for comparisons.
      */
@@ -73,23 +76,14 @@ public class CollisionSystem {
             }
         }
 
-        // damage objects (rectangle objects). Tiled rectangles are in PIXELS -> convert to world units.
         Rectangle playerRect = player.getBoundingRectangle();
         for (MapObject mo : mapManager.getDamageObjects()) {
             if (mo instanceof RectangleMapObject) {
                 RectangleMapObject rmo = (RectangleMapObject) mo;
                 Rectangle rectPx = rmo.getRectangle();
 
-                // convert rectangle from pixels to world units using MapManager's PPM
-                float pxToWorld = 1f / mapManager.getTileWidthPx() * mapManager.getTileWidth(); // tileWidthPx/PPM -> tileWidth (world)
-                // simpler: divide by PPM directly (mapManager internally knows PPM = 32)
-                float rectX = rectPx.x / mapManager.getTileWidthPx() * mapManager.getTileWidth() * (mapManager.getTileWidthPx() / mapManager.getTileWidthPx()); // keep stable
-                // The above looks complicated; perform direct division by PPM for clarity:
-                float rectX_world = rectPx.x /  (mapManager.getTileWidthPx() / mapManager.getTileWidth()) ; // not used
-                // Simpler and robust: use PPM constant: rectangle px -> world units by dividing by PPM (which MapManager uses)
-                // We'll compute rect in world units using mapManager.getTileWidthPx() / mapManager.getTileWidth() ratio:
-                // Since mapManager.getTileWidth() = tileWidthPx / PPM => PPM = tileWidthPx / mapManager.getTileWidth()
                 float PPM = mapManager.getTileWidthPx() / mapManager.getTileWidth();
+
                 Rectangle rectWorld = new Rectangle(
                     rectPx.x / PPM,
                     rectPx.y / PPM,

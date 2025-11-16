@@ -1,4 +1,4 @@
-package si.um.feri.platformer;
+package si.um.feri.platformer.managers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
@@ -9,21 +9,21 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 
 public class MapManager {
-    private TiledMap tiledMap;
-    private OrthogonalTiledMapRenderer renderer;
+    private final TiledMap tiledMap;
+    private final OrthogonalTiledMapRenderer renderer;
 
-    private TiledMapTileLayer foregroundLayer;
-    private TiledMapTileLayer coinLayer;
-    private MapObjects damageObjects;
+    private final TiledMapTileLayer foregroundLayer;
+    private final TiledMapTileLayer coinLayer;
+    private final MapObjects damageObjects;
 
-    private float tileWidthPx;
-    private float tileHeightPx;
-    private float mapWidthInPx;
-    private float mapHeightInPx;
+    private final float tileWidthPx;
+    private final float tileHeightPx;
+    private final float mapWidthInPx;
+    private final float mapHeightInPx;
     private static final float PPM = 32f;
 
-    private Sound damageTakenSound;
-    private Sound coinCollectSound;
+    private final Sound damageTakenSound;
+    private final Sound coinCollectSound;
 
     public MapManager(String tmxPath, String damageSoundPath, String coinSoundPath) {
         tiledMap = new TmxMapLoader().load(tmxPath);

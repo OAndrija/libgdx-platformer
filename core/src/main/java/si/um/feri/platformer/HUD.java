@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 
 public class HUD {
 
-    private BitmapFont font;
+    private final BitmapFont font;
     private int health = 100;
     private int score = 0;
 
